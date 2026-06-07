@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import './index.css'
 
 function App() {
   const [items, setItems] = useState([])
   const [name, setName] = useState('')
   const [value, setValue] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [status, setStatus] = useState('')
 
-  // Backend URL - in production this might be the server IP or a relative path if proxied
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   useEffect(() => {
@@ -14,16 +16,24 @@ function App() {
   }, [])
 
   const fetchItems = async () => {
+    setLoading(true)
     try {
       const res = await axios.get(`${API_URL}/api/items`)
       setItems(res.data)
+      setStatus('')
     } catch (err) {
       console.error('Error fetching items:', err)
+      setStatus('Error connecting to backend')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!name || !value) return
+    
+    setLoading(true)
     try {
       await axios.post(`${API_URL}/api/items`, { name, value })
       setName('')
@@ -31,43 +41,53 @@ function App() {
       fetchItems()
     } catch (err) {
       console.error('Error adding item:', err)
+      setStatus('Failed to add item')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>3-Tier MERN App</h1>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Add Item</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="container">
+      <div className="card">
+        <h1>3-Tier MERN Explorer</h1>
+        
+        <form onSubmit={handleSubmit} className="form-group">
+          <h2>Add New Entry</h2>
           <input 
             type="text" 
-            placeholder="Name" 
+            placeholder="Item Name (e.g. Server)" 
             value={name} 
             onChange={(e) => setName(e.target.value)} 
-            style={{ marginRight: '10px' }}
           />
           <input 
             type="text" 
-            placeholder="Value" 
+            placeholder="Description (e.g. t3.medium)" 
             value={value} 
             onChange={(e) => setValue(e.target.value)} 
-            style={{ marginRight: '10px' }}
           />
-          <button type="submit">Add</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Processing...' : 'Add to Database'}
+          </button>
         </form>
-      </div>
 
-      <div>
-        <h2>Items</h2>
-        <ul>
-          {items.map((item, index) => (
-            <li key={index}>
-              <strong>{item.name}</strong>: {item.value}
-            </li>
-          ))}
-        </ul>
+        <div className="list-section">
+          <h2>Stored Items</h2>
+          {status && <div className={`status-msg status-error`}>{status}</div>}
+          
+          {items.length === 0 && !loading ? (
+            <div className="status-msg">No items found in MongoDB.</div>
+          ) : (
+            <ul className="item-list">
+              {items.map((item, index) => (
+                <li key={index} className="item-row">
+                  <span className="item-name">{item.name}</span>
+                  <span className="item-value">{item.value}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   )
