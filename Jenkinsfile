@@ -31,8 +31,8 @@ pipeline {
                             -X"""
                     }
                     
-                    // Move the report file so Jenkins can find it for Quality Gate
-                    sh 'find . -name report-task.txt -exec cp {} . \;'
+                    // Force Jenkins to find the report file created by Docker
+                    sh 'cp .scannerwork/report-task.txt . || true'
                     
                     withSonarQubeEnv('SonarQube') {
                         timeout(time: 1, unit: 'HOURS') {
