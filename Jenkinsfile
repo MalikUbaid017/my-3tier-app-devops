@@ -4,8 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_BACKEND = "my-backend"
         DOCKER_IMAGE_FRONTEND = "my-frontend"
-        SONAR_HOST_URL = "http://13.234.226.173:9000"
-        SONAR_TOKEN = credentials('sonarqube-token')
+        SONAR_SERVER_URL = "http://sonarqube:9000"
     }
 
     stages {
@@ -18,21 +17,23 @@ pipeline {
         stage('Static Code Analysis') {
             steps {
                 script {
-                    sh """docker run --rm \
-                        -e SONAR_HOST_URL=${SONAR_HOST_URL} \
-                        -v "\$(pwd):/usr/src" \
-                        sonarsource/sonar-scanner-cli \
-                        -Dsonar.projectKey=3-tier-app \
-                        -Dsonar.sources=. \
-                        -Dsonar.token=${SONAR_TOKEN}"""
-                    
-                    // Force Jenkins to find the report file created by Docker
-                    sh 'cp .scannerwork/report-task.txt . || true'
-                    
+                    // Inject SonarQube configuration from Jenkins settings
                     withSonarQubeEnv('SonarQube') {
-                        timeout(time: 1, unit: 'HOURS') {
-                            waitForQualityGate abortPipeline: true
-                        }
+                        // Use single quotes for SH to let Linux handle environment variables
+                        sh '''docker run --rm \
+                            -v "$(pwd):/usr/src" \
+                            sonarsource/sonar-scanner-cli \
+                            -Dsonar.projectKey=3-tier-app \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=$SONAR_SERVER_URL \
+                            -Dsonar.token=$SONAR_AUTH_TOKEN'''
+                    }
+                    
+                    // Move the report file so Jenkins can find it for Quality Gate
+                    sh 'find . -name report-task.txt -exec cp {} . || true'
+                    
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
