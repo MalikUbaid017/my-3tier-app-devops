@@ -29,7 +29,7 @@ pipeline {
                     }
                     
                     // Force Jenkins to find the report file created by Docker
-                    sh "find . -name report-task.txt -exec cp {} . \;"
+                    sh 'cp .scannerwork/report-task.txt . || true'
                     
                     timeout(time: 1, unit: 'HOURS') {
                         waitForQualityGate abortPipeline: true
