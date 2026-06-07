@@ -25,6 +25,10 @@ pipeline {
                             -Dsonar.host.url=${SONAR_URL} \
                             -Dsonar.token=${SONAR_AUTH_TOKEN}"
                     }
+                    // This is required to show the SonarQube link in the sidebar
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
                 }
             }
         }
