@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_BACKEND = "my-backend"
         DOCKER_IMAGE_FRONTEND = "my-frontend"
-        SONAR_SCANNER_HOME = tool 'SonarScanner'
+        SONAR_HOST_URL = "http://13.234.226.173:9000"
     }
 
     stages {
@@ -17,12 +17,14 @@ pipeline {
         stage('Static Code Analysis') {
             steps {
                 script {
-                    // This assumes SonarQube is configured in Jenkins global settings
+                    // Using Docker to run Sonar Scanner (No tool configuration needed!)
                     withSonarQubeEnv('SonarQube') {
-                        sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                            -Dsonar.projectKey=3-tier-app \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://13.126.1.153:9000"
+                        sh "docker run --rm \
+                            -e SONAR_HOST_URL=${SONAR_HOST_URL} \
+                            -e SONAR_SCANNER_OPTS=\"-Dsonar.projectKey=3-tier-app\" \
+                            -e SONAR_TOKEN=${SONAR_AUTH_TOKEN} \
+                            -v \"\$(pwd):/usr/src\" \
+                            sonarsource/sonar-scanner-cli"
                     }
                 }
             }
@@ -30,13 +32,13 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh "docker compose build"
+                sh "docker-compose build"
             }
         }
 
         stage('Deploy') {
             steps {
-                sh "docker compose up -d"
+                sh "docker-compose up -d"
             }
         }
     }
