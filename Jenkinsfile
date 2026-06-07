@@ -18,14 +18,14 @@ pipeline {
             steps {
                 script {
                     withSonarQubeEnv('SonarQube') {
-                        // Added -Dsonar.sources and fixed path mapping
-                        sh "docker run --rm \
-                            -e SONAR_HOST_URL=${SONAR_HOST_URL} \
-                            -v \"\$(pwd):/usr/src\" \
+                        // Use SONAR_TOKEN (the standard injected variable) and single quotes
+                        sh '''docker run --rm \
+                            -e SONAR_HOST_URL=$SONAR_HOST_URL \
+                            -v "$(pwd):/usr/src" \
                             sonarsource/sonar-scanner-cli \
                             -Dsonar.projectKey=3-tier-app \
                             -Dsonar.sources=. \
-                            -Dsonar.token=${SONAR_AUTH_TOKEN}"
+                            -Dsonar.token=$SONAR_TOKEN'''
                     }
                     
                     // Force Jenkins to find the report file created by Docker
