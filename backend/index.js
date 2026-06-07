@@ -25,19 +25,24 @@ app.use(express.json());
 app.use((req, res, next) => {
   const end = httpRequestDurationMicroseconds.startTimer();
   res.on('finish', () => {
-    end({ method: req.method, route: req.path, code: res.statusCode });
+    // Label values must be strings
+    end({ 
+      method: req.method, 
+      route: req.path, 
+      code: res.statusCode.toString() 
+    });
   });
   next();
 });
 
 // MongoDB Connection
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
+mongoose.connect(mongoUri)
+  .then(() => console.log('MongoDB connected to:', mongoUri))
   .catch(err => console.error('MongoDB connection error:', err));
 
 const ItemSchema = new mongoose.Schema({
-  name: String,
-  value: String
+  name: { type: String, required: true },
+  value: { type: String, required: true }
 });
 const Item = mongoose.model('Item', ItemSchema);
 
@@ -47,20 +52,26 @@ app.get('/api/items', async (req, res) => {
     const items = await Item.find();
     res.json(items);
   } catch (err) {
+    console.error('Error fetching items:', err);
     res.status(500).json({ message: err.message });
   }
 });
 
 app.post('/api/items', async (req, res) => {
-  const item = new Item({
-    name: req.body.name,
-    value: req.body.value
-  });
+  console.log('Received POST request with body:', req.body);
+  const { name, value } = req.body;
+  
+  if (!name || !value) {
+    return res.status(400).json({ message: 'Name and value are required' });
+  }
+
+  const item = new Item({ name, value });
   try {
     const newItem = await item.save();
     res.status(201).json(newItem);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error saving item:', err);
+    res.status(500).json({ message: err.message });
   }
 });
 

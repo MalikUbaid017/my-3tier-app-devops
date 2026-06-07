@@ -9,7 +9,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
 
-  const API_URL = 'http://13.234.226.173:5000'
+  // Use environment variable or fallback to current hostname
+  const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`
 
   useEffect(() => {
     fetchItems()

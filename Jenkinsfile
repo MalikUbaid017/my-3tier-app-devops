@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_BACKEND = "my-backend"
         DOCKER_IMAGE_FRONTEND = "my-frontend"
-        SONAR_URL = "http://13.234.226.173:9000"
+        SONAR_URL = "http://localhost:9000"
     }
 
     stages {
