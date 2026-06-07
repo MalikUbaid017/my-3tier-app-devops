@@ -17,7 +17,7 @@ pipeline {
         stage('Static Code Analysis') {
             steps {
                 script {
-                    // Using Docker to run Sonar Scanner (No tool configuration needed!)
+                    // Using Docker to run Sonar Scanner
                     withSonarQubeEnv('SonarQube') {
                         sh "docker run --rm \
                             -e SONAR_HOST_URL=${SONAR_HOST_URL} \
@@ -25,6 +25,10 @@ pipeline {
                             -e SONAR_TOKEN=${SONAR_AUTH_TOKEN} \
                             -v \"\$(pwd):/usr/src\" \
                             sonarsource/sonar-scanner-cli"
+                    }
+                    // This is the missing piece that creates the link in the sidebar
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
