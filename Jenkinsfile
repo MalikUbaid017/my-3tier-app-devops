@@ -25,10 +25,6 @@ pipeline {
                             -Dsonar.host.url=${SONAR_URL} \
                             -Dsonar.token=${SONAR_AUTH_TOKEN}"
                     }
-                    // This will now allow the build to continue even if SonarQube says "Failed"
-                    timeout(time: 5, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: false
-                    }
                 }
             }
         }
