@@ -4,8 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_BACKEND = "my-backend"
         DOCKER_IMAGE_FRONTEND = "my-frontend"
-        // Internal URL for the scanner to use
-        SONAR_INTERNAL_URL = "http://ubuntu-sonarqube-1:9000"
+        SONAR_URL = "http://13.234.226.173:9000"
     }
 
     stages {
@@ -18,26 +17,17 @@ pipeline {
         stage('Static Code Analysis') {
             steps {
                 script {
-                    // Explicitly use the token we added to Jenkins
-                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                        sh """docker run --rm \
-                            --network ubuntu_default \
-                            -v "\$(pwd):/usr/src" \
-                            sonarsource/sonar-scanner-cli \
+                    withSonarQubeEnv('SonarQube') {
+                        // Use the native scanner installed on the host
+                        sh "sonar-scanner \
                             -Dsonar.projectKey=3-tier-app \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=http://ubuntu-sonarqube-1:9000 \
-                            -Dsonar.login=${SONAR_TOKEN} \
-                            -X"""
+                            -Dsonar.host.url=${SONAR_URL} \
+                            -Dsonar.token=${SONAR_AUTH_TOKEN}"
                     }
                     
-                    // Force Jenkins to find the report file created by Docker
-                    sh 'cp .scannerwork/report-task.txt . || true'
-                    
-                    withSonarQubeEnv('SonarQube') {
-                        timeout(time: 1, unit: 'HOURS') {
-                            waitForQualityGate abortPipeline: true
-                        }
+                    timeout(time: 1, unit: 'HOURS') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
