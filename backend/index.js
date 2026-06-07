@@ -25,11 +25,11 @@ app.use(express.json());
 app.use((req, res, next) => {
   const end = httpRequestDurationMicroseconds.startTimer();
   res.on('finish', () => {
-    // Label values must be strings
+    // Label values must be strings. res.statusCode is a number.
     end({ 
       method: req.method, 
       route: req.path, 
-      code: res.statusCode.toString() 
+      code: String(res.statusCode) 
     });
   });
   next();
