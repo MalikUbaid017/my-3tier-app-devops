@@ -31,13 +31,13 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh "docker-compose -p 3tier-app build"
+                sh "docker compose -p 3tier-app build"
             }
         }
 
         stage('Deploy') {
             steps {
-                sh "docker-compose -p 3tier-app up -d"
+                sh "docker compose -p 3tier-app up -d"
             }
         }
     }
