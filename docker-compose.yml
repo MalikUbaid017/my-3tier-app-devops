@@ -23,7 +23,7 @@ services:
     ports:
       - "3001:80"
     environment:
-      - VITE_API_URL=http://13.234.226.173:5000
+      - VITE_API_URL=http://3.6.160.64:5000
     depends_on:
       - backend
 
