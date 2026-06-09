@@ -9,7 +9,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
 
-  const API_URL = 'http://13.234.226.173:5000'
+  const API_URL = 'http://3.6.160.64:5000'
 
   useEffect(() => {
     fetchItems()
